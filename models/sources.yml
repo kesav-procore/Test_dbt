@@ -1,0 +1,44 @@
+version: 2
+
+sources:
+  - name: dummy  
+    tables:
+      - name: dept  
+      - name: emp
+      - name: products
+        description: "Raw products data."
+      - name: customers
+        description: "Raw customers data."
+      - name: orders
+        description: "Raw orders data."
+      - name: order_items
+        description: "Raw order items data."
+      - name: inventory
+        description: "Raw inventory data."      
+models:
+  - name: emp_data
+    description: Employee table
+    columns:
+      - name: emp_id
+        description: Employee ID
+      - name: emp_name
+        description: Employee Name
+      - name: salary
+        description: salary
+      - name: dept_id
+        description: Department ID
+    meta:
+      joins:
+        - join: dept_data
+          type: left
+          sql_on: ${emp_data.dept_id} = ${dept_data.dept_id}
+          fields:
+            - dept_name
+            
+  - name: dept_data
+    description: Department table
+    columns:
+      - name: dept_id
+        description: Department ID
+      - name: dept_name
+        description: Department Name

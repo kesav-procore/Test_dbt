@@ -1,0 +1,123 @@
+version: 2
+
+models:
+  - name: orders_Data
+    description: "Details of customer orders_Data."
+    columns:
+      - name: order_id
+        description: "Unique identifier for each order."
+      - name: order_date
+        description: "Date the order was placed."
+      - name: customer_id
+        description: "Identifier for the customer who placed the order."
+      - name: order_status
+        description: "Current status of the order."
+      - name: total_amount
+        description: "Total amount of the order."
+    meta:
+      joins:
+        - join: customers_Data
+          type: inner
+          sql_on: |
+            ${orders_Data.customer_id} = ${customers_Data.customer_id}
+          fields:
+            - first_name
+            - last_name
+        - join: order_items_Data
+          type: left
+          sql_on: |
+            ${orders_Data.order_id} = ${order_items_Data.order_id}
+            AND ${order_items_Data.quantity} > 0
+          fields:
+            - product_id
+            - total_price
+
+  - name: order_items_Data
+    description: "Items included in customer orders_Data."
+    columns:
+      - name: order_item_id
+        description: "Unique identifier for each order item."
+      - name: order_id
+        description: "Identifier for the order this item belongs to."
+      - name: product_id
+        description: "Identifier for the product in the order."
+      - name: quantity
+        description: "Number of units of the product ordered."
+      - name: unit_price
+        description: "Price per unit of the product."
+      - name: total_price
+        description: "Total price for this order item (quantity * unit_price)."        
+    meta:
+      joins:
+        - join: products_data
+          type: inner
+          sql_on: |
+            ${order_items_Data.product_id} = ${products_data.product_id}
+          fields:
+            - product_name
+            - price
+        - join: orders_Data
+          type: left
+          sql_on: |
+            ${order_items_Data.order_id} = ${orders_Data.order_id}
+            AND ${orders_Data.order_status} = 'Shipped'
+          fields:
+            - order_date
+            - customer_id
+
+  - name: customers_Data
+    description: "Contains customer data."
+    columns:
+      - name: customer_id
+        description: "Unique identifier for each customer."
+      - name: state
+        description: "State where the customer resides."
+      - name: created_at
+        description: "Timestamp when the customer was added."
+      - name: first_name
+        description: "First name of the customer."
+      - name: last_name
+        description: "Last name of the customer."
+      - name: email
+        description: "Customer email address."        
+    meta:
+      joins:
+        - join: orders_Data
+          type: left
+          sql_on: |
+            ${customers_Data.customer_id} = ${orders_Data.customer_id}
+            AND ${orders_Data.total_amount} > 500
+          fields:
+            - order_id
+            - order_status
+  - name: inventory_data
+    description: "Tracks inventory levels for products."
+    columns:
+      - name: inventory_id
+        description: "Unique identifier for each inventory record."
+        tests:
+          - not_null
+          - unique
+      - name: product_id
+        description: "Identifier for the product in inventory."
+        tests:
+          - not_null
+      - name: quantity
+        description: "Number of units of the product available in stock."
+      - name: last_updated
+        description: "Timestamp when the inventory record was last updated."
+  - name: products_data
+    description: "Contains information about products available for sale."
+    columns:
+      - name: product_id
+      - name: product_name
+      - name: product_description
+        description: "Detailed description of the product."
+      - name: price
+        description: "Price of the product."
+      - name: stock_quantity
+        description: "Number of products available in stock."
+      - name: created_at
+        description: "Timestamp when the product was added."
+
+
